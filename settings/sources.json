@@ -1,0 +1,10 @@
+{
+	"sources": {
+		"myAPI": {
+			"uri": "/dataInput"
+		},
+		"myAPI2": {
+			"uri": "/dataInput2"
+		}
+	}
+}
