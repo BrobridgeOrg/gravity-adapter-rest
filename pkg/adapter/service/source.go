@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"context"
+	"time"
 	//	"fmt"
 	"net/http"
 	"sync"
@@ -10,10 +10,10 @@ import (
 	dsa "github.com/BrobridgeOrg/gravity-api/service/dsa"
 	parallel_chunked_flow "github.com/cfsghost/parallel-chunked-flow"
 	"github.com/gin-gonic/gin"
+
 	//	validation "github.com/go-ozzo/ozzo-validation"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 var counter uint64
@@ -32,13 +32,6 @@ type Source struct {
 	parser    *parallel_chunked_flow.ParallelChunkedFlow
 }
 
-/*
-var packetPool = sync.Pool{
-	New: func() interface{} {
-		return &Packet{}
-	},
-}
-*/
 var requestPool = sync.Pool{
 	New: func() interface{} {
 		return &dsa.PublishRequest{}
@@ -76,21 +69,7 @@ func NewSource(adapter *Adapter, name string, sourceInfo *SourceInfo) *Source {
 					log.Info(id)
 				}
 			*/
-			/*
-				// Parse JSON
-				packet := packetPool.Get().(*Packet)
-				err := json.Unmarshal(data.([]byte), packet)
-				if err != nil {
-					packetPool.Put(packet)
-					return
-				}
-					// Convert payload to JSON string
-					payload, err := json.Marshal(packet.Payload)
-					if err != nil {
-						packetPool.Put(packet)
-						return
-					}
-			*/
+
 			eventName := jsoniter.Get(data.([]byte), "event").ToString()
 			payload := jsoniter.Get(data.([]byte), "payload").ToString()
 
@@ -98,7 +77,6 @@ func NewSource(adapter *Adapter, name string, sourceInfo *SourceInfo) *Source {
 			request := requestPool.Get().(*dsa.PublishRequest)
 			request.EventName = eventName
 			request.Payload = StrToBytes(payload)
-			//			packetPool.Put(packet)
 
 			output <- request
 		},
@@ -183,15 +161,6 @@ func (source *Source) Init() error {
 		"uri":    source.uri,
 	}).Info("Initializing source connector")
 
-	// Initializing gRPC streams
-	p := source.adapter.app.GetGRPCPool()
-
-	// Register initializer for stream
-	p.SetStreamInitializer("publish", func(conn *grpc.ClientConn) (interface{}, error) {
-		client := dsa.NewDataSourceAdapterClient(conn)
-		return client.PublishEvents(context.Background())
-	})
-
 	go source.eventReceiver()
 	go source.requestHandler()
 
@@ -225,14 +194,15 @@ func (source *Source) requestHandler() {
 
 func (source *Source) HandleRequest(request *dsa.PublishRequest) {
 
-	// Getting stream from pool
-	err := source.adapter.app.GetGRPCPool().GetStream("publish", func(s interface{}) error {
+	for {
+		connector := source.adapter.app.GetAdapterConnector()
+		err := connector.Publish(request.EventName, request.Payload, nil)
+		if err != nil {
+			log.Error(err)
+			time.Sleep(time.Second)
+			continue
+		}
 
-		// Send request
-		return s.(dsa.DataSourceAdapter_PublishEventsClient).Send(request)
-	})
-	if err != nil {
-		log.Error("Failed to get available stream:", err)
-		return
+		break
 	}
 }

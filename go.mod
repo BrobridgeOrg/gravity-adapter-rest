@@ -4,11 +4,12 @@ go 1.15
 
 require (
 	github.com/BrobridgeOrg/gravity-api v0.2.1
+	github.com/BrobridgeOrg/gravity-sdk v0.0.1
 	github.com/cfsghost/grpc-connection-pool v0.6.0
 	github.com/cfsghost/parallel-chunked-flow v0.0.2
 	github.com/gin-gonic/gin v1.6.3
-	github.com/json-iterator/go v1.1.9
-	github.com/sirupsen/logrus v1.6.0
+	github.com/json-iterator/go v1.1.10
+	github.com/sirupsen/logrus v1.7.0
 	github.com/soheilhy/cmux v0.1.4
 	github.com/spf13/viper v1.7.1
 	google.golang.org/grpc v1.32.0
