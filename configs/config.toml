@@ -2,7 +2,7 @@
 port = 8080
 
 [dsa]
-host = "0.0.0.0:30001"
+host = "0.0.0.0:32803"
 
 [source]
 config = "./settings/sources.json"

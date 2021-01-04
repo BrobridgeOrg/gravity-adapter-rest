@@ -4,16 +4,16 @@ import (
 	adapter_service "github.com/BrobridgeOrg/gravity-adapter-rest/pkg/adapter/service"
 	http_server "github.com/BrobridgeOrg/gravity-adapter-rest/pkg/http_server/server"
 	mux_manager "github.com/BrobridgeOrg/gravity-adapter-rest/pkg/mux_manager/manager"
-	grpc_connection_pool "github.com/cfsghost/grpc-connection-pool"
+	gravity_adapter "github.com/BrobridgeOrg/gravity-sdk/adapter"
 	log "github.com/sirupsen/logrus"
 )
 
 type AppInstance struct {
-	done       chan bool
-	grpcPool   *grpc_connection_pool.GRPCPool
-	adapter    *adapter_service.Adapter
-	httpServer *http_server.Server
-	muxManager *mux_manager.MuxManager
+	done             chan bool
+	adapter          *adapter_service.Adapter
+	adapterConnector *gravity_adapter.AdapterConnector
+	httpServer       *http_server.Server
+	muxManager       *mux_manager.MuxManager
 }
 
 func NewAppInstance() *AppInstance {
@@ -33,8 +33,8 @@ func (a *AppInstance) Init() error {
 	a.initMuxManager()
 	a.httpServer = http_server.NewServer(a)
 
-	// Initializing gRPC pool
-	err := a.initGRPCPool()
+	// Initializing adapter connector
+	err := a.initAdapterConnector()
 	if err != nil {
 		return err
 	}

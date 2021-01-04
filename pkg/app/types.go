@@ -3,11 +3,11 @@ package app
 import (
 	http_server "github.com/BrobridgeOrg/gravity-adapter-rest/pkg/http_server"
 	mux_manager "github.com/BrobridgeOrg/gravity-adapter-rest/pkg/mux_manager"
-	grpc_connection_pool "github.com/cfsghost/grpc-connection-pool"
+	gravity_adapter "github.com/BrobridgeOrg/gravity-sdk/adapter"
 )
 
 type App interface {
-	GetGRPCPool() *grpc_connection_pool.GRPCPool
+	GetAdapterConnector() *gravity_adapter.AdapterConnector
 	GetMuxManager() mux_manager.Manager
 	GetHTTPServer() http_server.Server
 }
