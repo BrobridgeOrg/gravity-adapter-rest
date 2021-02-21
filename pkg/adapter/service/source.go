@@ -11,7 +11,7 @@ import (
 	parallel_chunked_flow "github.com/cfsghost/parallel-chunked-flow"
 	"github.com/gin-gonic/gin"
 
-	//	validation "github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 )
@@ -101,7 +101,18 @@ func (source *Source) InitSubscription() error {
 
 	// API func
 	source.ginEngine.POST(source.uri, func(c *gin.Context) {
-		packet, err := c.GetRawData()
+		/*
+			packet, err := c.GetRawData()
+			if err != nil {
+				log.Error(err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				c.Abort()
+				return
+			}
+		*/
+
+		var body Packet
+		err := c.BindJSON(&body)
 		if err != nil {
 			log.Error(err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -109,37 +120,26 @@ func (source *Source) InitSubscription() error {
 			return
 		}
 
-		/*
-			var body Packet
-			err := c.BindJSON(&body)
-			if err != nil {
-				log.Error(err)
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				c.Abort()
-				return
-			}
+		// Validate fields
+		err = validation.ValidateStruct(&body,
+			validation.Field(&body.EventName, validation.Required),
+			validation.Field(&body.Payload, validation.Required),
+		)
+		if err != nil {
+			log.Error(err)
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			c.Abort()
+			return
+		}
 
-			// Validate fields
-			err = validation.ValidateStruct(&body,
-				validation.Field(&body.EventName, validation.Required),
-				validation.Field(&body.Payload, validation.Required),
-			)
-			if err != nil {
-				log.Error(err)
-				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-				c.Abort()
-				return
-			}
-
-			//convert to []byte
-			packet, err := json.Marshal(body)
-			if err != nil {
-				log.Error(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				c.Abort()
-				return
-			}
-		*/
+		//convert to []byte
+		packet, err := json.Marshal(body)
+		if err != nil {
+			log.Error(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.Abort()
+			return
+		}
 
 		// send message
 		source.incoming <- packet
