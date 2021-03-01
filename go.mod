@@ -3,9 +3,8 @@ module github.com/BrobridgeOrg/gravity-adapter-rest
 go 1.15
 
 require (
-	github.com/BrobridgeOrg/gravity-api v0.2.4
-	github.com/BrobridgeOrg/gravity-sdk v0.0.1
-	github.com/cfsghost/grpc-connection-pool v0.6.0
+	github.com/BrobridgeOrg/gravity-api v0.2.10
+	github.com/BrobridgeOrg/gravity-sdk v0.0.2
 	github.com/cfsghost/parallel-chunked-flow v0.0.2
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
