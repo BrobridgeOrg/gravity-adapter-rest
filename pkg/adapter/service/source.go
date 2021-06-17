@@ -7,7 +7,6 @@ import (
 	"sync"
 	"unsafe"
 
-	dsa "github.com/BrobridgeOrg/gravity-api/service/dsa"
 	parallel_chunked_flow "github.com/cfsghost/parallel-chunked-flow"
 	"github.com/gin-gonic/gin"
 
@@ -18,9 +17,14 @@ import (
 
 var counter uint64
 
-type Packet struct {
+type InputData struct {
 	EventName string      `json:"event"`
 	Payload   interface{} `json:"payload"`
+}
+
+type Packet struct {
+	EventName string
+	Payload   []byte
 }
 
 type Source struct {
@@ -34,7 +38,7 @@ type Source struct {
 
 var requestPool = sync.Pool{
 	New: func() interface{} {
-		return &dsa.PublishRequest{}
+		return &Packet{}
 	},
 }
 
@@ -74,7 +78,7 @@ func NewSource(adapter *Adapter, name string, sourceInfo *SourceInfo) *Source {
 			payload := jsoniter.Get(data.([]byte), "payload").ToString()
 
 			// Preparing request
-			request := requestPool.Get().(*dsa.PublishRequest)
+			request := requestPool.Get().(*Packet)
 			request.EventName = eventName
 			request.Payload = StrToBytes(payload)
 
@@ -111,7 +115,7 @@ func (source *Source) InitSubscription() error {
 			}
 		*/
 
-		var body Packet
+		var body InputData
 		err := c.BindJSON(&body)
 		if err != nil {
 			log.Error(err)
@@ -186,13 +190,13 @@ func (source *Source) requestHandler() {
 	for {
 		select {
 		case req := <-source.parser.Output():
-			source.HandleRequest(req.(*dsa.PublishRequest))
+			source.HandleRequest(req.(*Packet))
 			requestPool.Put(req)
 		}
 	}
 }
 
-func (source *Source) HandleRequest(request *dsa.PublishRequest) {
+func (source *Source) HandleRequest(request *Packet) {
 
 	for {
 		connector := source.adapter.app.GetAdapterConnector()
