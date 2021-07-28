@@ -7,8 +7,8 @@ maxPingsOutstanding = 3
 maxReconnects = -1
 
 [adapter]
-adapter_id = "rest_adapter"
-adapter_name = "REST Adapter"
+adapterID = "rest_adapter"
+adapterName = "REST Adapter"
 
 [service]
 port = 8080
