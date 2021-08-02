@@ -10,6 +10,10 @@ maxReconnects = -1
 adapterID = "rest_adapter"
 adapterName = "REST Adapter"
 
+# Authentication
+appID = "anonymous"
+accessKey = ""
+
 [service]
 port = 8080
 
