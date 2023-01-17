@@ -1,6 +1,8 @@
 package adapter
 
 import (
+	"fmt"
+	"sync/atomic"
 	"time"
 	//	"fmt"
 	"net/http"
@@ -67,12 +69,6 @@ func NewSource(adapter *Adapter, name string, sourceInfo *SourceInfo) *Source {
 		ChunkSize:  512,
 		ChunkCount: 512,
 		Handler: func(data interface{}, output func(interface{})) {
-			/*
-				id := atomic.AddUint64((*uint64)(&counter), 1)
-				if id%1000 == 0 {
-					log.Info(id)
-				}
-			*/
 
 			eventName := jsoniter.Get(data.([]byte), "event").ToString()
 			payload := jsoniter.Get(data.([]byte), "payload").ToString()
@@ -198,9 +194,17 @@ func (source *Source) requestHandler() {
 
 func (source *Source) HandleRequest(request *Packet) {
 
+	id := atomic.AddUint64((*uint64)(&counter), 1)
+	if id%1000 == 0 {
+		log.Info(id)
+	}
+
+	meta := make(map[string]interface{})
+	meta["Msg-Id"] = fmt.Sprintf("%s-%s", source.name, id)
+
 	for {
 		connector := source.adapter.app.GetAdapterConnector()
-		err := connector.Publish(request.EventName, request.Payload, nil)
+		err := connector.Publish(request.EventName, request.Payload, meta)
 		if err != nil {
 			log.Error(err)
 			time.Sleep(time.Second)
